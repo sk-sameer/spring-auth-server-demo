@@ -1,6 +1,5 @@
 package com.ss.ac.config;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,9 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient;
  * WebSecurityConfig configures the security settings for the application, including OAuth2 login and client support.
  * It defines a SecurityFilterChain bean to specify the security rules and a WebClient.Builder bean for making HTTP requests.
  */
-@Configuration
-@RequiredArgsConstructor
 @Slf4j
+@Configuration
 public class WebSecurityConfig {
 
     @Bean

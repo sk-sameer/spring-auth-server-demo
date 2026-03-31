@@ -26,8 +26,15 @@ spring:
             issuer-uri: http://localhost:9000
             user-name-attribute: sub
 
+app:
+  resource-server:
+    base-url: http://localhost:8083
+
 logging:
   level:
     org:
       springframework:
         security: DEBUG
+    com:
+      ss:
+        ac: DEBUG

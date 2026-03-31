@@ -1,5 +1,7 @@
 package com.ss.ac.service;
 
+import com.ss.ac.config.AppProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -9,31 +11,51 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * WebClientService is responsible for making HTTP requests to protected resources using WebClient.
- * It retrieves the access token from the security context and includes it in the Authorization header of the request.
+ * Service for making authenticated HTTP requests to protected resource servers.
+ * Uses WebClient with OAuth2 access tokens for authorization.
  */
 @Service
+@Slf4j
 public class WebClientService {
 
     private final WebClient webClient;
     private final OAuth2AuthorizedClientService authorizedClientService;
 
+    public WebClientService(WebClient.Builder webClientBuilder,
+                            OAuth2AuthorizedClientService authorizedClientService,
+                            AppProperties appProperties) {
 
-    public WebClientService(WebClient.Builder webClientBuilder, OAuth2AuthorizedClientService authorizedClientService) {
-        this.webClient = webClientBuilder.baseUrl("http://localhost:9000").build();
+        this.webClient = webClientBuilder
+                .baseUrl(appProperties.getResourceServer().getBaseUrl())
+                .build();
         this.authorizedClientService = authorizedClientService;
+        log.info("WebClientService initialized with resource server: {}", appProperties.getResourceServer().getBaseUrl());
     }
 
+    /**
+     * Fetches a protected resource from the resource server.
+     *
+     * @return the resource response as a String
+     * @throws IllegalStateException if no access token is available
+     */
     public String resource() {
         String accessToken = getAccessToken();
+        log.debug("Making request to resource server with access token");
+
         return webClient.get()
-                .uri("http://localhost:8083/read-resource")
+                .uri("/read-resource")
                 .headers(headers -> headers.setBearerAuth(accessToken))
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
+                .block(); // Note: Consider using reactive approach in production
     }
 
+    /**
+     * Retrieves the access token from the current security context.
+     *
+     * @return the access token value
+     * @throws IllegalStateException if no valid OAuth2 authentication or token is available
+     */
     private String getAccessToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -46,7 +68,7 @@ public class WebClientService {
                 return client.getAccessToken().getTokenValue();
             }
         }
-        throw new IllegalStateException("No access token available");
+        throw new IllegalStateException("No access token available. User may not be authenticated.");
     }
 
 }
