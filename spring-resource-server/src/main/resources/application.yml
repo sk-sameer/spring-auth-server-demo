@@ -1,0 +1,41 @@
+server:
+  port: 8083
+
+spring:
+  application:
+        name: spring-resource-server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+auth-config:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          - issuer-uri: https://iam.realm-a.com/realms/realm-a
+            expected-audience: myclient # Optional: Audience to validate against the token's "aud" claim.
+            allowed-algs: RS256, RS512 # Specify allowed signing algorithms to enhance security.
+            jwks:
+              connection-timeout-ms: 1000 # Optional: Timeout for fetching JWKS keys, in milliseconds (default is 500ms).
+              read-timeout-ms: 1000 # Optional: Timeout for reading JWKS keys, in milliseconds (default is 500ms).
+            converter:
+              user-id-claim-path: preferred_username
+              bank-id-claim-path: oid
+              tph-bank-mapping: # Mapping between issuer-bank code and internal TPH Bank ID
+                "9057": HBSE
+              claim-mappings:
+                # {bank-id} -> Placeholder that will be replaced with the actual bank ID extracted from the token using the bank-claim-path/bank-id-claim-path path.
+                - authorization-claim-path: authorizations.{bank-id}.permissions
+                  authorization-prefix: ROLE_
+                - authorization-claim-path: authorizations.{bank-id}.brand.*.permissions
+                  authorization-prefix: ROLE_
+

@@ -1,0 +1,20 @@
+server:
+  port: 9000
+  servlet:
+    session:
+      cookie:
+        name: AUTH_SERVER_SESSIONID
+        path: /
+        http-only: true
+        secure: false
+        same-site: lax
+
+spring:
+  application:
+    name: spring-auth-server
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG

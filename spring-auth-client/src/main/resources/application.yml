@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: spring-auth-client
+
+  security:
+    oauth2:
+      client:
+        registration:
+          myclient:
+            client-id: myclient
+            client-secret: secret # Plain text secret used at client side application but at auth server it should be hashed (BCrypt encoded) when password encoder is used
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - profile
+              - email
+              - user.read
+              - user.write
+        provider:
+          myclient:
+            issuer-uri: http://localhost:9000
+            user-name-attribute: sub
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
