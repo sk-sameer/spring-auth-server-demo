@@ -1,6 +1,8 @@
 package com.ss.rs.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,31 +13,30 @@ import org.springframework.web.bind.annotation.RestController;
  * <ul>
  *   <li>/resource - Requires valid JWT token (any authenticated user)</li>
  *   <li>/read-resource - Requires 'user.read' scope in JWT token</li>
- *   <li>/write-resource - Requires 'user.write' scope (without SCOPE_ prefix)</li>
+ *   <li>/write-resource - Requires 'user.write' scope in JWT token</li>
  * </ul>
  *
- * <p><b>Note:</b> Scopes are granted during authorization at the Authorization Server
- * and embedded in the JWT token. Spring Security automatically validates these scopes
- * when evaluating @PreAuthorize annotations. Use 'SCOPE_' prefix when checking OAuth2 scopes.</p>
+ * <p><b>Note:</b> OAuth2 scopes are automatically prefixed with 'SCOPE_' by Spring Security.
+ * Use 'SCOPE_' prefix when checking OAuth2 scopes in @PreAuthorize annotations.</p>
  */
 @RestController
 public class ResourceController {
 
     @GetMapping("/resource")
-    public String resource() {
-        return "This is a protected resource";
+    public String resource(@AuthenticationPrincipal Jwt jwt) {
+        String subject = jwt != null ? jwt.getSubject() : "anonymous";
+        return "This is a protected resource. Hello, " + subject + "!";
     }
 
-    @GetMapping("read-resource")
+    @GetMapping("/read-resource")
     @PreAuthorize("hasAuthority('SCOPE_user.read')")
-    public String readResource() {
-        return "This resource is available to users with 'user.read' authority.";
+    public String readResource(@AuthenticationPrincipal Jwt jwt) {
+        return "Read access granted for user: " + jwt.getSubject();
     }
 
-    @GetMapping("write-resource")
-    @PreAuthorize("hasAuthority('user.write')")
-    public String writeResource() {
-        return "This resource is available to users with 'user.write' authority.";
+    @GetMapping("/write-resource")
+    @PreAuthorize("hasAuthority('SCOPE_user.write')")
+    public String writeResource(@AuthenticationPrincipal Jwt jwt) {
+        return "Write access granted for user: " + jwt.getSubject();
     }
-
 }
