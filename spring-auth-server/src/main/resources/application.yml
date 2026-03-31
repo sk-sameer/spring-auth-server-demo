@@ -13,8 +13,49 @@ spring:
   application:
     name: spring-auth-server
 
+# Authorization Server Configuration
+auth-server:
+  # Issuer URI - this should match your publicly accessible URL
+  issuer-uri: http://localhost:9000
+
+  # Development mode settings
+  dev-mode:
+    enable-direct-login: true
+
+  # Registered OAuth2 Clients
+  clients:
+    - client-id: myclient
+      client-secret: secret
+      redirect-uris:
+        - http://localhost:8080/login/oauth2/code/myclient
+      scopes:
+        - openid
+        - profile
+        - email
+        - user.read
+        - user.write
+      grant-types:
+        - authorization_code
+        - refresh_token
+      require-consent: false
+
+  # In-memory users (for development only - use a database in production)
+  users:
+    - username: abc
+      password: abc
+      roles:
+        - USER
+    - username: admin
+      password: admin
+      roles:
+        - USER
+        - ADMIN
+
 logging:
   level:
     org:
       springframework:
         security: DEBUG
+    com:
+      ss:
+        as: DEBUG

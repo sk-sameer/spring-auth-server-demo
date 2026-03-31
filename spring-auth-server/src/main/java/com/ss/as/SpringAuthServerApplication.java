@@ -1,4 +1,4 @@
-package oauthserver;
+package com.ss.as;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,3 +9,4 @@ public class SpringAuthServerApplication {
         SpringApplication.run(SpringAuthServerApplication.class, args);
     }
 }
+
