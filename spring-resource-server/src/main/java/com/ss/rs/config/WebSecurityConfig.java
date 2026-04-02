@@ -26,7 +26,7 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Configuration
 @EnableMethodSecurity // enables method-level security annotations: @PreAuthorize, @PostAuthorize, @Secured, @RolesAllowed
-public class ResourceConfig {
+public class WebSecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -38,8 +38,10 @@ public class ResourceConfig {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults()));
+                        .jwt(Customizer.withDefaults()))
+                .oauth2Client(Customizer.withDefaults()); // enables OAuth2 client support for making outbound requests with access tokens (service-to-service calls)
 
         return http.build();
     }
+
 }

@@ -10,6 +10,25 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9000
+      client:
+        registration:
+          shopping-service:
+            client-id: temp2
+            client-secret: secret # Plain text secret used at client side application but at auth server it should be hashed (BCrypt encoded) when password encoder is used
+            authorization-grant-type: client_credentials
+            client-authentication-method: client_secret_post #client_secret_basic
+            scope:
+              - user.read
+              - user.write
+        provider:
+          shopping-service:
+            issuer-uri: http://localhost:9000
+
+app:
+  external-services:
+    shopping-service:
+      base-url: http://localhost:8084
+      get-products-url: /api/products
 
 logging:
   level:
