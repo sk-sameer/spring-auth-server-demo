@@ -43,28 +43,18 @@ public class ClientConfig {
     }
 
     private RegisteredClient buildRegisteredClient(AuthServerProperties.Client clientConfig, PasswordEncoder encoder) {
-        RegisteredClient.Builder builder = RegisteredClient.withId(UUID.randomUUID().toString())
+        return RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId(clientConfig.getClientId())
                 .clientSecret(encoder.encode(clientConfig.getClientSecret()))
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
-
-        for (String grantType : clientConfig.getGrantTypes()) {
-            builder.authorizationGrantType(mapGrantType(grantType));
-        }
-
-        for (String redirectUri : clientConfig.getRedirectUris()) {
-            builder.redirectUri(redirectUri);
-        }
-
-        for (String scope : clientConfig.getScopes()) {
-            builder.scope(scope);
-        }
-
-        builder.clientSettings(ClientSettings.builder()
-                .requireAuthorizationConsent(clientConfig.isRequireConsent())
-                .build());
-
-        return builder.build();
+                .scopes(scopes -> scopes.addAll(clientConfig.getScopes()))
+                .redirectUris(uris -> uris.addAll(clientConfig.getRedirectUris()))
+                .clientAuthenticationMethods(authMethods ->
+                        authMethods.addAll(clientConfig.getClientAuthenticationMethods()))
+                .authorizationGrantTypes(grantTypes ->
+                        grantTypes.addAll(clientConfig.getGrantTypes()))
+                .clientSettings(ClientSettings.builder()
+                        .requireAuthorizationConsent(clientConfig.isRequireConsent()).build())
+                .build();
     }
 
     private RegisteredClient buildDefaultClient(PasswordEncoder encoder) {
@@ -86,15 +76,4 @@ public class ClientConfig {
                 .build();
     }
 
-    private AuthorizationGrantType mapGrantType(String grantType) {
-        return switch (grantType.toLowerCase()) {
-            case "authorization_code" -> AuthorizationGrantType.AUTHORIZATION_CODE;
-            case "refresh_token" -> AuthorizationGrantType.REFRESH_TOKEN;
-            case "client_credentials" -> AuthorizationGrantType.CLIENT_CREDENTIALS;
-            case "jwt_bearer" -> AuthorizationGrantType.JWT_BEARER;
-            case "device_code" -> AuthorizationGrantType.DEVICE_CODE;
-            case "token_exchange" -> AuthorizationGrantType.TOKEN_EXCHANGE;
-            default -> new AuthorizationGrantType(grantType);
-        };
-    }
 }
