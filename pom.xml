@@ -19,6 +19,7 @@
         <module>spring-auth-client</module>
         <module>spring-auth-server</module>
         <module>spring-resource-server</module>
+        <module>spring-resource-server-shopping</module>
     </modules>
 
     <properties>
