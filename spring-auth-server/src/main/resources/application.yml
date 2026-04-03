@@ -40,10 +40,10 @@ auth-server:
       client-authentication-methods: client_secret_basic
       require-consent: false
 
-    - client-id: temp2
+    - client-id: resource-server-client
       client-secret: secret
       redirect-uris:
-        - http://localhost:8084/login/oauth2/code/temp2
+        - http://localhost:8083/login/oauth2/code/shopping
       scopes:
         - openid
         - profile
@@ -56,7 +56,11 @@ auth-server:
       client-authentication-methods:
         - client_secret_post
         - client_secret_basic
+        - private_key_jwt
       require-consent: false
+      jwks:
+        uri: http://localhost:8083/private_key_jwt/jwks
+        signing-algorithm: RS256
 
   # In-memory users (for development only - use a database in production)
   users:

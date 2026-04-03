@@ -36,7 +36,7 @@ public class ShoppingService {
         log.debug("Making request to shopping service with access token");
         return restClient.get()
                 .uri(shoppingServiceBaseUrl + getProductsUrl)
-                .attributes(clientRegistrationId("shopping-service"))
+                .attributes(clientRegistrationId("internal-resource-server-id"))
                 // Use a fixed principal name to scope the access token to the application, there will only be a single access token, and it will be used for all requests.
                 .attributes(principal("my-application"))
                 .retrieve()

@@ -1,5 +1,6 @@
 package com.ss.as.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.AuthenticationException;
@@ -14,6 +15,7 @@ import java.net.URI;
  * Global exception handler for the Authorization Server.
  * Provides consistent error responses following RFC 7807 Problem Details format.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -21,6 +23,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(OAuth2AuthenticationException.class)
     public ProblemDetail handleOAuth2AuthenticationException(OAuth2AuthenticationException ex) {
+        log.error("OAuth2 authentication error: {}", ex.getMessage(), ex);
         OAuth2Error error = ex.getError();
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED,
@@ -34,6 +37,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ProblemDetail handleAuthenticationException(AuthenticationException ex) {
+        log.error("Authentication error: {}", ex.getMessage(), ex);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED,
                 "Authentication failed"
@@ -46,6 +50,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidClientException.class)
     public ProblemDetail handleInvalidClientException(InvalidClientException ex) {
+        log.error("Invalid client error: {}", ex.getMessage(), ex);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED,
                 ex.getMessage()
@@ -56,13 +61,4 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler(Exception.class)
-    public ProblemDetail handleGenericException(Exception ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred"
-        );
-        problem.setTitle("Internal Server Error");
-        return problem;
-    }
 }

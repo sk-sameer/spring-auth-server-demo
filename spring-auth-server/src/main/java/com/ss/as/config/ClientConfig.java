@@ -52,9 +52,20 @@ public class ClientConfig {
                         authMethods.addAll(clientConfig.getClientAuthenticationMethods()))
                 .authorizationGrantTypes(grantTypes ->
                         grantTypes.addAll(clientConfig.getGrantTypes()))
-                .clientSettings(ClientSettings.builder()
-                        .requireAuthorizationConsent(clientConfig.isRequireConsent()).build())
+                .clientSettings(buildClientSettings(clientConfig))
                 .build();
+    }
+
+    private ClientSettings buildClientSettings(AuthServerProperties.Client clientConfig) {
+        ClientSettings.Builder builder = ClientSettings.builder()
+                .requireAuthorizationConsent(clientConfig.isRequireConsent());
+
+        if (clientConfig.isJwksConfigured()) {
+            builder.jwkSetUrl(clientConfig.getJwks().getUri());
+            builder.tokenEndpointAuthenticationSigningAlgorithm(clientConfig.getJwks().getSigningAlgorithm());
+        }
+
+        return builder.build();
     }
 
     private RegisteredClient buildDefaultClient(PasswordEncoder encoder) {

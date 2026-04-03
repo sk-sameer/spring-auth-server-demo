@@ -12,19 +12,29 @@ spring:
           issuer-uri: http://localhost:9000
       client:
         registration:
-          shopping-service:
-            client-id: temp2
+          internal-resource-server-id:
+            client-id: resource-server-client
             client-secret: secret # Plain text secret used at client side application but at auth server it should be hashed (BCrypt encoded) when password encoder is used
             authorization-grant-type: client_credentials
-            client-authentication-method: client_secret_post #client_secret_basic
+            client-authentication-method: private_key_jwt #private_key_jwt #client_secret_post #client_secret_basic
             scope:
               - user.read
               - user.write
         provider:
-          shopping-service:
+          internal-resource-server-id:
             issuer-uri: http://localhost:9000
 
 app:
+  client:
+    # JWK configuration for private_key_jwt authentication method
+    jwk:
+      source: keystore # Options: keystore, runtime
+      keystore:
+        password: password
+        path: classpath:client-keystore.p12
+        alias: spring-resource-server
+        type: PKCS12
+
   external-services:
     shopping-service:
       base-url: http://localhost:8084

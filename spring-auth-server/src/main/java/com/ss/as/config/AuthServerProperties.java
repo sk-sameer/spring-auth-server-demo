@@ -1,15 +1,19 @@
 package com.ss.as.config;
 
+import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Externalized configuration properties for the Authorization Server.
@@ -37,6 +41,9 @@ public class AuthServerProperties {
         private List<ClientAuthenticationMethod> clientAuthenticationMethods = new ArrayList<>();
         private boolean requireConsent = false;
 
+        @Valid
+        private JwkConfig jwks; // Optional configuration for JWKS if using private_key_jwt authentication method
+
         public void setGrantTypes(List<String> grantTypes) {
             this.grantTypes = grantTypes.stream()
                     .map(this::mapGrantType)
@@ -47,6 +54,12 @@ public class AuthServerProperties {
             this.clientAuthenticationMethods = method.stream()
                     .map(ClientAuthenticationMethod::valueOf)
                     .toList();
+        }
+
+        public boolean isJwksConfigured() {
+            return Optional.ofNullable(jwks)
+                    .filter(j -> StringUtils.hasText(j.uri) && j.signingAlgorithm != null)
+                    .isPresent();
         }
 
         private AuthorizationGrantType mapGrantType(String grantType) {
@@ -69,6 +82,13 @@ public class AuthServerProperties {
         private String username;
         private String password;
         private List<String> roles = new ArrayList<>();
+    }
+
+    @Getter
+    @Setter
+    public static class JwkConfig {
+        private String uri;
+        private SignatureAlgorithm signingAlgorithm;
     }
 
 }
