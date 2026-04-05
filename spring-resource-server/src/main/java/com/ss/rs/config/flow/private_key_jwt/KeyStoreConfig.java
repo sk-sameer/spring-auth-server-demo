@@ -80,7 +80,7 @@ public class KeyStoreConfig {
 
             return new RSAKey.Builder(publicKey)
                     .privateKey(privateKey)
-                    .keyID("1NP_e5mknRB2pkFlcI889oWKI-eeUNUwITKyHdqDf5U")
+                    .keyID(keystoreAlias)
                     .algorithm(JWSAlgorithm.RS256)
                     .keyUse(KeyUse.SIGNATURE)
                     .build();
