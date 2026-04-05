@@ -3,6 +3,8 @@ package com.ss.rs.config.flow.private_key_jwt;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.ss.rs.exception.KeystoreLoadException;
+import com.ss.rs.exception.RsaKeyExtractionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,9 +24,14 @@ import java.security.interfaces.RSAPublicKey;
  * This class loads the keystore, extracts the RSA key pair, and provides it as a JWK for OAuth2 client authentication.
  */
 @Slf4j
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "app.client.jwk.source", havingValue = "keystore")
+@ConditionalOnProperty(
+        prefix = "spring.security.oauth2.client.registration.internal-resource-server-id",
+        name = "client-authentication-method",
+        havingValue = "private_key_jwt"
+)
 public class KeyStoreConfig {
 
     private final ResourceLoader resourceLoader;
@@ -42,7 +49,7 @@ public class KeyStoreConfig {
             log.info("Successfully loaded keystore");
         } catch (Exception e) {
             log.error("Failed to load keystore from path: {}. Make sure the file exists and is a valid keystore.", keystoreConfig.getPath(), e);
-            throw new RuntimeException("Keystore file not found or invalid: " + keystoreConfig.getPath(), e);
+            throw new KeystoreLoadException("Keystore file not found or invalid: " + keystoreConfig.getPath(), e);
         }
         return keyStore;
     }
@@ -73,13 +80,13 @@ public class KeyStoreConfig {
 
             return new RSAKey.Builder(publicKey)
                     .privateKey(privateKey)
-                    .keyID(keystoreAlias)
+                    .keyID("1NP_e5mknRB2pkFlcI889oWKI-eeUNUwITKyHdqDf5U")
                     .algorithm(JWSAlgorithm.RS256)
                     .keyUse(KeyUse.SIGNATURE)
                     .build();
         } catch (Exception e) {
             log.error("Failed to extract RSA key from keystore", e);
-            throw e;
+            throw new RsaKeyExtractionException("Failed to extract RSA key from keystore: " + e.getMessage(), e);
         }
     }
 

@@ -41,9 +41,7 @@ auth-server:
       require-consent: false
 
     - client-id: resource-server-client
-      client-secret: secret
-      redirect-uris:
-        - http://localhost:8083/login/oauth2/code/shopping
+      client-secret: my-oauth2-client-secret-min-32-chars-here
       scopes:
         - openid
         - profile
@@ -51,7 +49,6 @@ auth-server:
         - user.read
         - user.write
       grant-types:
-        - refresh_token
         - client_credentials
       client-authentication-methods:
         - client_secret_post

@@ -6,6 +6,7 @@ import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -31,7 +32,7 @@ public class ClientJwtKeyConfig {
     private RSAKey cacheRsaKey;
 
     private final JwkClientProperties jwkClientProperties;
-    private final RSAKey rsaKey;
+    private final ObjectProvider<RSAKey> rsaKey; // Injected RSAKey bean for keystore loading (if configured)
 
     /**
      * Creates a JWK resolver function that provides RSA key pairs for OAuth2 client registrations
@@ -57,7 +58,7 @@ public class ClientJwtKeyConfig {
     private RSAKey getRSAKey() {
         if (jwkClientProperties.isKeystoreSource()) {
             log.info("Loading RSA key pair from keystore for private_key_jwt client authentication");
-            return rsaKey;
+            return rsaKey.getIfAvailable();
         } else {
             log.info("Generating new RSA key pair at runtime for private_key_jwt client authentication");
             return generateRsaKey();
