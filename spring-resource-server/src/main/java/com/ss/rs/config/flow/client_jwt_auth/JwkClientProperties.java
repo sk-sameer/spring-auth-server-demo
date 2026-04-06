@@ -1,12 +1,13 @@
 package com.ss.rs.config.flow.client_jwt_auth;
 
 import com.nimbusds.jose.JWSAlgorithm;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.annotation.PostConstruct;
+import lombok.*;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * Externalized configuration properties for OAuth2 client JWK settings.
@@ -17,7 +18,11 @@ import org.springframework.stereotype.Component;
 @Setter
 @Component
 @ConfigurationProperties(prefix = "app.client")
+@RequiredArgsConstructor
 public class JwkClientProperties {
+
+    @Setter(AccessLevel.NONE)
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     private String registrationId;
     private String authenticationMethod;
@@ -73,6 +78,28 @@ public class JwkClientProperties {
 
     public boolean isRuntimeSource() {
         return "runtime".equalsIgnoreCase(jwk.source) || jwk.source == null;
+    }
+
+    @PostConstruct
+    void validate() {
+        if (!StringUtils.hasText(registrationId)) {
+            throw new IllegalArgumentException("Client registration ID must be provided in app.client.registration-id property.");
+        }
+
+        if (!StringUtils.hasText(authenticationMethod)) {
+            throw new IllegalArgumentException("Client authentication method must be provided in app.client.authentication-method property.");
+        }
+
+        ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId(registrationId);
+        if (clientRegistration == null) {
+            throw new IllegalArgumentException("No spring.security.oauth2.client.registration." + registrationId + " found. Add that registration or fix app.client.registration-id.");
+        }
+
+        if (!clientRegistration.getClientAuthenticationMethod().getValue().equals(authenticationMethod)) {
+            throw new IllegalArgumentException("Authentication method mismatch for client registration ID: " + registrationId +
+                    ". " + authenticationMethod + ", is not equal to: " + clientRegistration.getClientAuthenticationMethod().getValue());
+        }
+
     }
 
 }
