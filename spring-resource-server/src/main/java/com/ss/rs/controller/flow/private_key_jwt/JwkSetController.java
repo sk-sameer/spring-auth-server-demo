@@ -2,6 +2,7 @@ package com.ss.rs.controller.flow.private_key_jwt;
 
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
+import com.ss.rs.config.flow.client_jwt_auth.JwkClientProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -21,11 +22,12 @@ public class JwkSetController {
 
     private final Function<ClientRegistration, JWK> clientJwkResolver;
     private final ClientRegistrationRepository clientRegistrationRepository;
+    private final JwkClientProperties jwkClientProperties;
 
     @GetMapping("/private_key_jwt/jwks")
     public Map<String, Object> jwkSet() {
         ClientRegistration clientRegistration =
-                clientRegistrationRepository.findByRegistrationId("internal-resource-server-id");
+                clientRegistrationRepository.findByRegistrationId(jwkClientProperties.getRegistrationId());
 
         JWK jwk = clientJwkResolver.apply(clientRegistration);
 

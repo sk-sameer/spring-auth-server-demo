@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-        name: spring-resource-server
+    name: spring-resource-server
 
   security:
     oauth2:
@@ -13,10 +13,10 @@ spring:
       client:
         registration:
           internal-resource-server-id:
-            client-id: resource-server-client
-            client-secret: secret # Plain text secret used at client side application but at auth server it should be hashed (BCrypt encoded) when password encoder is used
+            client-id: resource-server-client-symmetric
+            client-secret: my-oauth2-client-secret-min-32-chars-here # Plain text secret used at client side application but at auth server it should be hashed (BCrypt encoded) when password encoder is used
             authorization-grant-type: client_credentials
-            client-authentication-method: private_key_jwt #private_key_jwt #client_secret_post #client_secret_basic
+            client-authentication-method: client_secret_jwt #client_secret_jwt #private_key_jwt #client_secret_post #client_secret_basic
             scope:
               - user.read
               - user.write
@@ -26,9 +26,17 @@ spring:
 
 app:
   client:
+    registration-id: internal-resource-server-id # Should match the client-id defined in the client registration
+    authentication-method: client_secret_jwt # Should match the client_authentication_method defined in the client registration
+
+    # Configuration for client_secret_jwt authentication method
+    symmetric-key:
+      algorithm: HmacSHA256 # HmacSHA256, HmacSHA384, HmacSHA512
+      jws-algorithm: HS256 # HS256, HS384, HS512
+
     # JWK configuration for private_key_jwt authentication method
     jwk:
-      source: keystore # Options: keystore, runtime
+      source: runtime # Options: keystore, runtime
       keystore:
         password: password
         path: classpath:client-keystore.p12

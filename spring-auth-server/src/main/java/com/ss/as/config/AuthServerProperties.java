@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.jose.jws.JwsAlgorithm;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -56,9 +58,15 @@ public class AuthServerProperties {
                     .toList();
         }
 
-        public boolean isJwksConfigured() {
+        public boolean isJwksUriConfigured() {
             return Optional.ofNullable(jwks)
-                    .filter(j -> StringUtils.hasText(j.uri) && j.signingAlgorithm != null)
+                    .filter(j -> StringUtils.hasText(j.uri))
+                    .isPresent();
+        }
+
+        public boolean isJwksSigningAlgorithmConfigured() {
+            return Optional.ofNullable(jwks)
+                    .filter(j -> j.signingAlgorithm != null)
                     .isPresent();
         }
 
@@ -88,7 +96,28 @@ public class AuthServerProperties {
     @Setter
     public static class JwkConfig {
         private String uri;
-        private SignatureAlgorithm signingAlgorithm;
+        private JwsAlgorithm signingAlgorithm;
+
+        public void setSigningAlgorithm(String signingAlgorithm) {
+            if (signingAlgorithm == null) {
+                throw new IllegalArgumentException("Signing algorithm cannot be null");
+            }
+
+            SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.from(signingAlgorithm);
+            if (signatureAlgorithm != null) {
+                this.signingAlgorithm = signatureAlgorithm;
+                return;
+            }
+
+            MacAlgorithm macAlgorithm = MacAlgorithm.from(signingAlgorithm);
+            if (macAlgorithm != null) {
+                this.signingAlgorithm = macAlgorithm;
+                return;
+            }
+
+            throw new IllegalArgumentException("Unsupported signing algorithm: " + signingAlgorithm);
+        }
+
     }
 
 }

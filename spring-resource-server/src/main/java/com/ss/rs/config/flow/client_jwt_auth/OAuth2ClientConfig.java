@@ -1,4 +1,4 @@
-package com.ss.rs.config.flow.private_key_jwt;
+package com.ss.rs.config.flow.client_jwt_auth;
 
 import com.nimbusds.jose.jwk.JWK;
 import lombok.RequiredArgsConstructor;

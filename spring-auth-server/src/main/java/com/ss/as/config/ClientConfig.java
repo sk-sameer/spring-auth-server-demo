@@ -1,6 +1,7 @@
 package com.ss.as.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ import java.util.UUID;
  * Configuration for OAuth2 registered clients.
  * In production, consider using JdbcRegisteredClientRepository for persistent storage.
  */
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class ClientConfig {
@@ -43,9 +45,12 @@ public class ClientConfig {
     }
 
     private RegisteredClient buildRegisteredClient(AuthServerProperties.Client clientConfig, PasswordEncoder encoder) {
+        // Determine how to store the client secret based on authentication method
+        String clientSecret = encodeClientSecret(clientConfig, encoder);
+
         return RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId(clientConfig.getClientId())
-                .clientSecret(encoder.encode(clientConfig.getClientSecret()))
+                .clientSecret(clientSecret)
                 .scopes(scopes -> scopes.addAll(clientConfig.getScopes()))
                 .redirectUris(uris -> uris.addAll(clientConfig.getRedirectUris()))
                 .clientAuthenticationMethods(authMethods ->
@@ -56,12 +61,50 @@ public class ClientConfig {
                 .build();
     }
 
+    /**
+     * Encodes client secret based on the authentication method.
+     *
+     * <p><b>Storage Strategy:</b></p>
+     * <ul>
+     *   <li><b>client_secret_jwt:</b> Returns raw secret (no encoding).
+     *       Spring Authorization Server's JwtClientAssertionDecoderFactory retrieves this value
+     *       directly and uses it as the HMAC key. HMAC verification requires the original secret,
+     *       not a hash, so encoding would break MAC verification.</li>
+     *   <li><b>client_secret_basic, client_secret_post:</b> Uses PasswordEncoder.encode() (BCrypt).
+     *       Passwords are hashed for secure storage and compared using the encoder during
+     *       client authentication.</li>
+     * </ul>
+     *
+     * @param clientConfig the client configuration containing the raw secret
+     * @param encoder      the password encoder for hashing (BCrypt)
+     * @return properly formatted secret for the authentication method
+     */
+    private String encodeClientSecret(AuthServerProperties.Client clientConfig, PasswordEncoder encoder) {
+        String rawSecret = clientConfig.getClientSecret();
+
+        if (isClientSecretJwtAuthenticationMethodEnabled(clientConfig)) {
+            log.debug("Client '{}' uses client_secret_jwt - storing raw secret.", clientConfig.getClientId());
+            return rawSecret;
+        }
+
+        log.debug("Client '{}' uses password based authentication - encoding secret.", clientConfig.getClientId());
+        return encoder.encode(rawSecret);
+    }
+
+    private boolean isClientSecretJwtAuthenticationMethodEnabled(AuthServerProperties.Client clientConfig) {
+        return clientConfig.getClientAuthenticationMethods()
+                .contains(ClientAuthenticationMethod.CLIENT_SECRET_JWT);
+    }
+
     private ClientSettings buildClientSettings(AuthServerProperties.Client clientConfig) {
         ClientSettings.Builder builder = ClientSettings.builder()
                 .requireAuthorizationConsent(clientConfig.isRequireConsent());
 
-        if (clientConfig.isJwksConfigured()) {
+        if (clientConfig.isJwksUriConfigured()) {
             builder.jwkSetUrl(clientConfig.getJwks().getUri());
+        }
+
+        if (clientConfig.isJwksSigningAlgorithmConfigured()) {
             builder.tokenEndpointAuthenticationSigningAlgorithm(clientConfig.getJwks().getSigningAlgorithm());
         }
 

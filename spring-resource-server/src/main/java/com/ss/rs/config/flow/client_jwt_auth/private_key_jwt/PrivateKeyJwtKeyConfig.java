@@ -1,12 +1,14 @@
-package com.ss.rs.config.flow.private_key_jwt;
+package com.ss.rs.config.flow.client_jwt_auth.private_key_jwt;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.ss.rs.config.flow.client_jwt_auth.JwkClientProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -25,9 +27,10 @@ import java.util.function.Function;
  * with the Authorization Server using the private_key_jwt method.
  */
 @Slf4j
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
-public class ClientJwtKeyConfig {
+@ConditionalOnProperty(name = "app.client.authentication-method", havingValue = "private_key_jwt")
+public class PrivateKeyJwtKeyConfig {
 
     private RSAKey cacheRsaKey;
 

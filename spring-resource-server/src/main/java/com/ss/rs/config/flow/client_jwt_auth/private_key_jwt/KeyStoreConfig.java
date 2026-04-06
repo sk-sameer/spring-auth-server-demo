@@ -1,8 +1,9 @@
-package com.ss.rs.config.flow.private_key_jwt;
+package com.ss.rs.config.flow.client_jwt_auth.private_key_jwt;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.ss.rs.config.flow.client_jwt_auth.JwkClientProperties;
 import com.ss.rs.exception.KeystoreLoadException;
 import com.ss.rs.exception.RsaKeyExtractionException;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +28,7 @@ import java.security.interfaces.RSAPublicKey;
 @Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "app.client.jwk.source", havingValue = "keystore")
-@ConditionalOnProperty(
-        prefix = "spring.security.oauth2.client.registration.internal-resource-server-id",
-        name = "client-authentication-method",
-        havingValue = "private_key_jwt"
-)
+@ConditionalOnProperty(name = "app.client.authentication-method", havingValue = "private_key_jwt")
 public class KeyStoreConfig {
 
     private final ResourceLoader resourceLoader;
@@ -39,7 +36,7 @@ public class KeyStoreConfig {
 
     @Bean
     public KeyStore keyStore() throws Exception {
-        JwkClientProperties.KeystoreConfig keystoreConfig = jwkClientProperties.getKeystore();
+        JwkClientProperties.KeystoreConfig keystoreConfig = jwkClientProperties.getJwk().getKeystore();
         log.info("Loading keystore from: {}", keystoreConfig.getPath());
 
         KeyStore keyStore = KeyStore.getInstance(keystoreConfig.getType());
@@ -56,7 +53,7 @@ public class KeyStoreConfig {
 
     @Bean
     public RSAKey rsaKey(KeyStore keyStore) throws Exception {
-        JwkClientProperties.KeystoreConfig keystoreConfig = jwkClientProperties.getKeystore();
+        JwkClientProperties.KeystoreConfig keystoreConfig = jwkClientProperties.getJwk().getKeystore();
         String keystoreAlias = keystoreConfig.getAlias();
         log.info("Extracting RSA key from keystore with alias: {}", keystoreAlias);
 

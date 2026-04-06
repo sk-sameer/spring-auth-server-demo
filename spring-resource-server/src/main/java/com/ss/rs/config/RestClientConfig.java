@@ -8,13 +8,19 @@ import org.springframework.security.oauth2.client.web.client.RequestAttributePri
 import org.springframework.web.client.RestClient;
 
 /**
- * This configuration class defines a RestClient bean that is configured to use OAuth2 for authentication.
- * The RestClient is set up with an OAuth2ClientHttpRequestInterceptor that uses an OAuth2AuthorizedClientManager to manage the authorized clients.
- * The interceptor is also configured with a RequestAttributePrincipalResolver to resolve the principal for the access token.
+ * Configures RestClient bean with OAuth2 interceptor for service-to-service authentication.
+ * The interceptor uses OAuth2AuthorizedClientManager to automatically inject Bearer tokens
+ * out outbound requests using the application identity instead of per-user credentials.
  */
 @Configuration
 public class RestClientConfig {
 
+    /**
+     * Creates RestClient bean with OAuth2 interceptor for token-based authentication.
+     * Uses RequestAttributePrincipalResolver to scope tokens to application identity.
+     * @param authorizedClientManager Manager for retrieving and caching access tokens
+     * @return RestClient configured with OAuth2 interceptor
+     */
     @Bean
     public RestClient restClient(OAuth2AuthorizedClientManager authorizedClientManager) {
         OAuth2ClientHttpRequestInterceptor requestInterceptor = new OAuth2ClientHttpRequestInterceptor(authorizedClientManager);

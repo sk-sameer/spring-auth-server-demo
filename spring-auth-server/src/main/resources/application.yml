@@ -41,7 +41,7 @@ auth-server:
       require-consent: false
 
     - client-id: resource-server-client
-      client-secret: my-oauth2-client-secret-min-32-chars-here
+      client-secret: secret123
       scopes:
         - openid
         - profile
@@ -58,6 +58,22 @@ auth-server:
       jwks:
         uri: http://localhost:8083/private_key_jwt/jwks
         signing-algorithm: RS256
+
+    - client-id: resource-server-client-symmetric
+      client-secret: my-oauth2-client-secret-min-32-chars-here
+      scopes:
+        - openid
+        - profile
+        - email
+        - user.read
+        - user.write
+      grant-types:
+        - client_credentials
+      client-authentication-methods:
+        - client_secret_jwt
+      require-consent: false
+      jwks:
+        signing-algorithm: HS256
 
   # In-memory users (for development only - use a database in production)
   users:

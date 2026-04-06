@@ -7,6 +7,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for shopping service endpoints. Delegates to ShoppingService which calls
+ * an external resource server with OAuth2 client credentials authentication.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor

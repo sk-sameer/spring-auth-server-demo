@@ -1,5 +1,6 @@
 package com.ss.rs.service;
 
+import com.ss.rs.config.flow.client_jwt_auth.JwkClientProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +26,7 @@ public class ShoppingService {
     private String getProductsUrl;
 
     private final RestClient restClient;
+    private final JwkClientProperties clientProperties;
 
     /**
      * Fetches a protected resource from the resource server.
@@ -36,7 +38,7 @@ public class ShoppingService {
         log.debug("Making request to shopping service with access token");
         return restClient.get()
                 .uri(shoppingServiceBaseUrl + getProductsUrl)
-                .attributes(clientRegistrationId("internal-resource-server-id"))
+                .attributes(clientRegistrationId(clientProperties.getRegistrationId()))
                 // Use a fixed principal name to scope the access token to the application, there will only be a single access token, and it will be used for all requests.
                 .attributes(principal("my-application"))
                 .retrieve()
