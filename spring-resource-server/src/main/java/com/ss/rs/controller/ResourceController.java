@@ -29,13 +29,13 @@ public class ResourceController {
     }
 
     @GetMapping("/read-resource")
-    @PreAuthorize("hasAuthority('SCOPE_user.read')")
+    @PreAuthorize("hasAuthority('read')")
     public String readResource(@AuthenticationPrincipal Jwt jwt) {
         return "Read access granted for user: " + jwt.getSubject();
     }
 
     @GetMapping("/write-resource")
-    @PreAuthorize("hasAuthority('SCOPE_user.write')")
+    @PreAuthorize("hasAuthority('write')")
     public String writeResource(@AuthenticationPrincipal Jwt jwt) {
         return "Write access granted for user: " + jwt.getSubject();
     }

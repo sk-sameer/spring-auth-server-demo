@@ -22,6 +22,23 @@ auth-server:
   dev-mode:
     enable-direct-login: true
 
+  permissions:
+    role-permissions:
+      ROLE_USER:
+        - read
+      ROLE_ADMIN:
+        - read
+        - write
+
+    # Client-specific permissions (for client_credentials grant type)
+    client-permissions:
+      resource-server-client:
+        - read
+        - write
+      resource-server-client-symmetric:
+        - read
+        - write
+
   # Registered OAuth2 Clients
   clients:
     - client-id: myclient
@@ -32,8 +49,6 @@ auth-server:
         - openid
         - profile
         - email
-        - user.read
-        - user.write
       grant-types:
         - authorization_code
         - refresh_token
@@ -46,8 +61,6 @@ auth-server:
         - openid
         - profile
         - email
-        - user.read
-        - user.write
       grant-types:
         - client_credentials
       client-authentication-methods:
@@ -65,8 +78,6 @@ auth-server:
         - openid
         - profile
         - email
-        - user.read
-        - user.write
       grant-types:
         - client_credentials
       client-authentication-methods:

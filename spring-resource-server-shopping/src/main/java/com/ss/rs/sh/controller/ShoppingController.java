@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ShoppingController {
 
     @GetMapping("/products")
-    @PreAuthorize("hasAuthority('SCOPE_user.read')")
+    @PreAuthorize("hasAuthority('read')")
     public String getProducts() {
         return "Returning list of available products: Product A, Product B, Product C";
     }

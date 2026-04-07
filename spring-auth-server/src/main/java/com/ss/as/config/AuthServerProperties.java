@@ -13,9 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Externalized configuration properties for the Authorization Server.
@@ -29,8 +27,19 @@ import java.util.Optional;
 public class AuthServerProperties {
 
     private String issuerUri;
+    @Valid
     private List<Client> clients = new ArrayList<>();
+    @Valid
     private List<User> users = new ArrayList<>();
+    @Valid
+    private Permissions permissions = new Permissions();
+
+    @Getter
+    @Setter
+    public static class Permissions {
+        private Map<String, List<String>> rolePermissions = new HashMap<>();
+        private Map<String, List<String>> clientPermissions = new HashMap<>();
+    }
 
     @Getter
     @Setter

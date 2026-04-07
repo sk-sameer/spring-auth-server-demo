@@ -19,16 +19,18 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientService {
 
     private final WebClient webClient;
+    private final AppProperties appProperties;
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     public WebClientService(WebClient.Builder webClientBuilder,
                             OAuth2AuthorizedClientService authorizedClientService,
                             AppProperties appProperties) {
 
+        this.appProperties = appProperties;
+        this.authorizedClientService = authorizedClientService;
         this.webClient = webClientBuilder
                 .baseUrl(appProperties.getResourceServer().getBaseUrl())
                 .build();
-        this.authorizedClientService = authorizedClientService;
         log.info("WebClientService initialized with resource server: {}", appProperties.getResourceServer().getBaseUrl());
     }
 
@@ -43,7 +45,7 @@ public class WebClientService {
         log.debug("Making request to resource server with access token");
 
         return webClient.get()
-                .uri("/read-resource")
+                .uri(appProperties.getResourceServer().getGetEndpoint())
                 .headers(headers -> headers.setBearerAuth(accessToken))
                 .retrieve()
                 .bodyToMono(String.class)

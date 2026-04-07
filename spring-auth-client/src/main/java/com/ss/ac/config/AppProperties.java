@@ -20,5 +20,6 @@ public class AppProperties {
     @Setter
     public static class ResourceServer {
         private String baseUrl;
+        private String getEndpoint;
     }
 }

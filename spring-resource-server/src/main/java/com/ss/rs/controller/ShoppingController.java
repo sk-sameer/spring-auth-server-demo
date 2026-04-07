@@ -19,7 +19,7 @@ public class ShoppingController {
     private final ShoppingService shoppingService;
 
     @GetMapping("/products")
-    @PreAuthorize("hasAuthority('SCOPE_user.read')")
+    @PreAuthorize("hasAuthority('read')")
     public String getProducts() {
         log.debug("Received request for /products endpoint");
         return shoppingService.getProducts();
