@@ -8,6 +8,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,8 +19,9 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
     @Override
     public AbstractAuthenticationToken convert(Jwt jwtToken) {
 
-        Set<GrantedAuthority> permissions = jwtToken.getClaimAsStringList("permissions")
+        Set<GrantedAuthority> permissions = Optional.ofNullable(jwtToken.getClaimAsStringList("permissions"))
                 .stream()
+                .flatMap(Collection::stream)
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toUnmodifiableSet());
 
