@@ -1,57 +1,78 @@
 # 🔐 Spring OAuth 2.0 & OpenID Connect Demo
 
-A **multi-module Spring Boot** project demonstrating a complete **OAuth 2.0 + OpenID Connect (OIDC)** ecosystem — Authorization Server, Resource Server, and Client Application — all wired together with Spring Security.
+A **multi-module Spring Boot** project demonstrating a complete **OAuth 2.0 + OpenID Connect (OIDC)** ecosystem — Authorization Server, Resource Servers, and Client Application — all wired together with Spring Security.
 
-> Built for learning purposes. Ideal for understanding how OAuth 2.0 Authorization Code flow works end-to-end with Spring Boot 3.x.
+> Built for learning purposes. Ideal for understanding OAuth 2.0 flows including Authorization Code, Client Credentials, and JWT-based client authentication.
 
 ---
 
 ## 📐 Architecture
 
 ```
-┌─────────────────────┐       ┌──────────────────────────┐       ┌───────────────────────┐
-│  spring-auth-client │──────▶│  spring-auth-server      │       │ spring-resource-server │
-│  (OAuth2 Client)    │       │  (Authorization Server)  │       │  (Resource Server)     │
-│  Port: 8080         │       │  Port: 9000              │       │  Port: 8083            │
-│                     │       │                          │       │                        │
-│  • OAuth2 Login     │       │  • Issues JWT Tokens     │       │  • Validates JWTs      │
-│  • WebClient calls  │───────┼──────────────────────────┼──────▶│  • @PreAuthorize       │
-│  • OIDC User Info   │       │  • OIDC Discovery        │       │  • Protected Endpoints │
-└─────────────────────┘       └──────────────────────────┘       └───────────────────────┘
+┌─────────────────────┐       ┌──────────────────────────┐       ┌───────────────────────────────┐
+│  spring-auth-client │──────▶│  spring-auth-server      │       │ spring-resource-server        │
+│  (OAuth2 Client)    │       │  (Authorization Server)  │       │ (Resource Server + OAuth2     │
+│  Port: 8080         │       │  Port: 9000              │       │  Client for service-to-service)│
+│                     │       │                          │       │ Port: 8083                    │
+│  • OAuth2 Login     │       │  • Issues JWT Tokens     │       │                               │
+│  • WebClient calls  │───────┼──────────────────────────┼──────▶│  • Validates JWTs             │
+│  • OIDC User Info   │       │  • OIDC Discovery        │       │  • @PreAuthorize              │
+└─────────────────────┘       │  • Multiple Clients      │       │  • Calls Shopping Service     │
+                              │  • Permission-based      │       └───────────────────────────────┘
+                              │    Token Customization   │                      │
+                              └──────────────────────────┘                      │ client_credentials
+                                                                                │ (private_key_jwt /
+                                                                                │  client_secret_jwt)
+                                                                                ▼
+                                                                ┌───────────────────────────────┐
+                                                                │ spring-resource-server-shopping│
+                                                                │ (Resource Server)              │
+                                                                │ Port: 8084                     │
+                                                                │                                │
+                                                                │  • Validates JWTs              │
+                                                                │  • Product API                 │
+                                                                └───────────────────────────────┘
 ```
 
-**Flow:**
-1. User accesses a protected endpoint on the **Client** (`:8080`)
-2. Client redirects to the **Authorization Server** (`:9000`) for login
-3. User authenticates → Auth Server issues an **Authorization Code**
-4. Client exchanges the code for **Access Token + ID Token**
-5. Client uses the Access Token to call the **Resource Server** (`:8083`)
-6. Resource Server validates the JWT and returns the protected resource
+**Flows:**
+
+1. **Authorization Code Flow (User Login)**
+   - User accesses protected endpoint on Client (`:8080`)
+   - Redirects to Authorization Server (`:9000`) for login
+   - User authenticates → Auth Server issues Authorization Code
+   - Client exchanges code for Access Token + ID Token
+   - Client calls Resource Server (`:8083`) with Access Token
+
+2. **Client Credentials Flow (Service-to-Service)**
+   - Resource Server (`:8083`) acts as OAuth2 Client
+   - Authenticates to Auth Server using `private_key_jwt` or `client_secret_jwt`
+   - Obtains token and calls Shopping Resource Server (`:8084`)
 
 ---
 
 ## 🧩 Modules
 
-| Module | Port | Description |
-|---|---|---|
-| **`spring-auth-server`** | `9000` | Spring Authorization Server — issues OAuth2/OIDC tokens, manages clients & users |
-| **`spring-auth-client`** | `8080` | OAuth2 Client — performs login via Authorization Code grant, calls Resource Server |
-| **`spring-resource-server`** | `8083` | OAuth2 Resource Server — exposes protected REST APIs, validates JWT tokens |
+| Module                            | Port   | Description                                                                    |
+|-----------------------------------|--------|--------------------------------------------------------------------------------|
+| `spring-auth-server`              | `9000` | Authorization Server — issues OAuth2/OIDC tokens, manages clients & users      |
+| `spring-auth-client`              | `8080` | OAuth2 Client — user login via Authorization Code grant, calls Resource Server |
+| `spring-resource-server`          | `8083` | Resource Server + OAuth2 Client — validates JWTs, calls external services      |
+| `spring-resource-server-shopping` | `8084` | Resource Server — exposes product APIs, validates JWTs                         |
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Technology | Version |
-|---|---|
-| Java | 21 |
-| Spring Boot | 3.5.x |
-| Spring Authorization Server | via `spring-boot-starter-oauth2-authorization-server` |
-| Spring Security OAuth2 Client | via `spring-boot-starter-oauth2-client` |
-| Spring Security OAuth2 Resource Server | via `spring-boot-starter-oauth2-resource-server` |
-| Spring WebFlux (WebClient) | via `spring-boot-starter-webflux` |
-| Lombok | 1.18.42 |
-| Maven (Multi-module) | 3.x |
+| Technology                             | Version                                               |
+|----------------------------------------|-------------------------------------------------------|
+| Java                                   | 21                                                    |
+| Spring Boot                            | 3.5.13                                                |
+| Spring Authorization Server            | via `spring-boot-starter-oauth2-authorization-server` |
+| Spring Security OAuth2 Client          | via `spring-boot-starter-oauth2-client`               |
+| Spring Security OAuth2 Resource Server | via `spring-boot-starter-oauth2-resource-server`      |
+| Spring WebFlux (WebClient)             | via `spring-boot-starter-webflux`                     |
+| Lombok                                 | 1.18.42                                               |
+| Maven (Multi-module)                   | 3.x                                                   |
 
 ---
 
@@ -69,7 +90,7 @@ A **multi-module Spring Boot** project demonstrating a complete **OAuth 2.0 + Op
 ./mvnw clean install
 ```
 
-### Run (start all three servers)
+### Run (start all four servers)
 
 Start each module **in order** in separate terminals:
 
@@ -77,10 +98,13 @@ Start each module **in order** in separate terminals:
 # 1. Authorization Server (port 9000)
 ./mvnw spring-boot:run -pl spring-auth-server
 
-# 2. Resource Server (port 8083)
+# 2. Shopping Resource Server (port 8084)
+./mvnw spring-boot:run -pl spring-resource-server-shopping
+
+# 3. Resource Server (port 8083)
 ./mvnw spring-boot:run -pl spring-resource-server
 
-# 3. Client Application (port 8080)
+# 4. Client Application (port 8080)
 ./mvnw spring-boot:run -pl spring-auth-client
 ```
 
@@ -90,21 +114,27 @@ Start each module **in order** in separate terminals:
 
 ## 🔑 Default Credentials
 
-### User (for login)
-| Field | Value |
-|---|---|
-| Username | `abc` |
-| Password | `abc` |
+### Users (for login)
 
-### OAuth2 Client
-| Field | Value |
-|---|---|
-| Client ID | `myclient` |
-| Client Secret | `secret` |
-| Auth Method | `client_secret_basic` |
-| Grant Type | `authorization_code`, `refresh_token` |
-| Redirect URI | `http://localhost:8080/login/oauth2/code/myclient` |
-| Scopes | `openid`, `profile`, `email`, `user.read`, `user.write` |
+| Username | Password | Roles           |
+|----------|----------|-----------------|
+| `abc`    | `abc`    | `USER`          |
+| `admin`  | `admin`  | `USER`, `ADMIN` |
+
+### OAuth2 Clients
+
+| Client ID                          | Secret                                      | Grant Types                           | Auth Method                                                    |
+|------------------------------------|---------------------------------------------|---------------------------------------|----------------------------------------------------------------|
+| `myclient`                         | `secret`                                    | `authorization_code`, `refresh_token` | `client_secret_basic`                                          |
+| `resource-server-client`           | `secret123`                                 | `client_credentials`                  | `private_key_jwt`, `client_secret_post`, `client_secret_basic` |
+| `resource-server-client-symmetric` | `my-oauth2-client-secret-min-32-chars-here` | `client_credentials`                  | `client_secret_jwt`                                            |
+
+### Role-Based Permissions
+
+| Role         | Permissions     |
+|--------------|-----------------|
+| `ROLE_USER`  | `read`          |
+| `ROLE_ADMIN` | `read`, `write` |
 
 ---
 
@@ -112,31 +142,39 @@ Start each module **in order** in separate terminals:
 
 ### Authorization Server (`:9000`)
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/` | Welcome page |
-| `POST` | `/auth/login` | Programmatic token endpoint (client credentials + user auth) |
-| `GET` | `/.well-known/openid-configuration` | OIDC Discovery |
-| `GET` | `/oauth2/authorize` | Authorization endpoint |
-| `POST` | `/oauth2/token` | Token endpoint |
-| `GET` | `/oauth2/jwks` | JWK Set (public keys) |
-| `GET` | `/userinfo` | OIDC UserInfo |
+| Method | Endpoint                            | Description                           |
+|--------|-------------------------------------|---------------------------------------|
+| `GET`  | `/`                                 | Welcome page                          |
+| `POST` | `/auth/login`                       | Direct token endpoint (dev mode only) |
+| `GET`  | `/.well-known/openid-configuration` | OIDC Discovery                        |
+| `GET`  | `/oauth2/authorize`                 | Authorization endpoint                |
+| `POST` | `/oauth2/token`                     | Token endpoint                        |
+| `GET`  | `/oauth2/jwks`                      | JWK Set (public keys)                 |
+| `GET`  | `/userinfo`                         | OIDC UserInfo                         |
 
 ### Client Application (`:8080`)
 
-| Method | Endpoint | Auth Required | Description |
-|---|---|---|---|
-| `GET` | `/` | ❌ | Public home page |
-| `GET` | `/api/hello` | ✅ | Greets the authenticated user |
-| `GET` | `/resource` | ✅ | Proxies call to Resource Server's `/read-resource` |
+| Method | Endpoint     | Auth Required | Description                     |
+|--------|--------------|---------------|---------------------------------|
+| `GET`  | `/`          | ❌             | Public home page                |
+| `GET`  | `/api/hello` | ✅             | Greets authenticated user       |
+| `GET`  | `/resource`  | ✅             | Proxies call to Resource Server |
 
 ### Resource Server (`:8083`)
 
-| Method | Endpoint | Auth Required | Description |
-|---|---|---|---|
-| `GET` | `/resource` | ✅ Bearer Token | Generic protected resource |
-| `GET` | `/read-resource` | ✅ `SCOPE_user.read` | Requires `user.read` scope |
-| `GET` | `/write-resource` | ✅ `user.write` | Requires `user.write` authority |
+| Method | Endpoint                | Auth Required | Description                                      |
+|--------|-------------------------|---------------|--------------------------------------------------|
+| `GET`  | `/resource`             | ✅ JWT         | Generic protected resource                       |
+| `GET`  | `/read-resource`        | ✅ `read`      | Requires `read` permission                       |
+| `GET`  | `/write-resource`       | ✅ `write`     | Requires `write` permission                      |
+| `GET`  | `/products`             | ✅ `read`      | Fetches products from Shopping Service           |
+| `GET`  | `/private_key_jwt/jwks` | ❌             | Exposes client public keys for `private_key_jwt` |
+
+### Shopping Resource Server (`:8084`)
+
+| Method | Endpoint        | Auth Required | Description          |
+|--------|-----------------|---------------|----------------------|
+| `GET`  | `/api/products` | ✅ `read`      | Returns product list |
 
 ---
 
@@ -145,18 +183,23 @@ Start each module **in order** in separate terminals:
 ### Browser-Based (Authorization Code Flow)
 
 1. Open **http://localhost:8080/api/hello**
-2. You'll be redirected to the Auth Server login page at `:9000`
+2. Redirected to Auth Server login page at `:9000`
 3. Log in with `abc` / `abc`
-4. You'll be redirected back to the client and see:  
-   `Hello abc, Welcome to the Spring Security Oauth2 Client Application`
+4. Redirected back to client:
+   ```
+   Hello abc, Welcome to the Spring Security Oauth2 Client Application
+   ```
 
 ### Client → Resource Server
 
-1. Open **http://localhost:8080/resource** (after logging in)
-2. The Client fetches the access token from the session, calls `:8083/read-resource`, and returns:  
-   `This resource is available to users with 'user.read' authority.`
+1. Open **http://localhost:8080/resource** (after login)
+2. Client fetches access token, calls `:8083/products`
+3. Resource Server calls Shopping Service (`:8084`) using `client_credentials`
+4. Returns product list
 
-### Direct Token Request (Programmatic)
+### Direct Token Request (Dev Mode)
+
+> Enable with: `auth-server.dev-mode.enable-direct-login=true`
 
 ```bash
 curl -X POST http://localhost:9000/auth/login \
@@ -178,7 +221,7 @@ curl -X POST http://localhost:9000/auth/login \
 }
 ```
 
-### Call Resource Server directly with a token
+### Call Resource Server with Token
 
 ```bash
 curl http://localhost:8083/resource \
@@ -187,82 +230,131 @@ curl http://localhost:8083/resource \
 
 ---
 
-## 🏗️ Project Structure
+## 🔐 OAuth2 Client Authentication Methods
 
-```
-spring-auth-server/                          # Root (parent POM)
-├── pom.xml                                  # Parent POM with dependency management
-│
-├── spring-auth-server/                      # 🔐 Authorization Server
-│   ├── pom.xml
-│   └── src/main/java/oauthserver/
-│       ├── SpringAuthServerApplication.java
-│       ├── config/
-│       │   └── AuthorizationServerConfig.java   # OAuth2 server config, clients, users, JWK
-│       └── controller/
-│           ├── HomeController.java              # GET /
-│           └── AuthController.java              # POST /auth/login
-│
-├── spring-auth-client/                      # 🖥️ OAuth2 Client
-│   ├── pom.xml
-│   └── src/main/java/com/ss/ac/
-│       ├── SpringAuthClientApplication.java
-│       ├── config/
-│       │   ├── WebSecurityConfig.java           # Security filter chain, OAuth2 login
-│       │   └── JwtDecoderFactory.java           # Cached JWT decoder per registration
-│       ├── controller/
-│       │   ├── HomeController.java              # GET /
-│       │   ├── HelloController.java             # GET /api/hello
-│       │   └── ResourceClientController.java    # GET /resource (proxy)
-│       └── service/
-│           ├── WebClientService.java            # WebClient with Bearer token
-│           └── CustomOidcUserService.java       # Extracts roles from access token
-│
-└── spring-resource-server/                  # 🛡️ Resource Server
-    ├── pom.xml
-    └── src/main/java/com/ss/rs/
-        ├── SpringResourceServerApplication.java
-        ├── config/
-        │   └── ResourceConfig.java              # JWT resource server config
-        └── controller/
-            └── ResourceController.java          # Protected endpoints
-```
+This project demonstrates all four standard client authentication methods:
+
+| Method                | Sent As                         | Security | Used By                            | Best For                                       |
+|-----------------------|---------------------------------|----------|------------------------------------|------------------------------------------------|
+| `client_secret_basic` | `Authorization` header (Base64) | ⭐⭐       | `myclient`                         | Simple integrations, legacy systems            |
+| `client_secret_post`  | Request Body (Plain text)       | ⭐⭐       | `resource-server-client`           | When header can't be modified                  |
+| `client_secret_jwt`   | Signed JWT (Symmetric)          | ⭐⭐⭐      | `resource-server-client-symmetric` | Enhaced secret, shared secret                  |
+| `private_key_jwt`     | Signed JWT (Asymmetric)         | ⭐⭐⭐⭐     | `resource-server-client`           | Highest security, no shared secret transmitted |
+
+### Key Differences
+- **Secret vs. Key**: `basic`, `post`, and `secret_jwt` use a shared secret. `private_key_jwt` uses a private key that never leaves the client.
+- **Transmitted Credentials**: `basic` and `post` send the secret itself. `jwt` methods only send a signed assertion, making them immune to interception of the secret.
+- **Recommended**: Use `private_key_jwt` for microservices/M2M and `client_secret_basic` for simple web apps.
 
 ---
 
-## 🔍 Key Implementation Details
+## 🔍 Key Features
 
-### Authorization Server (`spring-auth-server`)
+### Authorization Server
 
-- **In-memory client registration** — `myclient` with BCrypt-encoded secret
-- **In-memory user store** — single user `abc` with `ROLE_USER`
-- **RSA key pair** generated at startup for JWT signing (2048-bit)
-- **Custom JWT claims** — adds `authorities` and `bank-id` to access tokens
-- **OIDC enabled** — supports OpenID Connect discovery, UserInfo endpoint
-- **Dual security filter chains** — one for OAuth2 protocol endpoints, one for form login
+- **Externalized Configuration** — All clients, users, and permissions in `application.yml`
+- **Multiple OAuth2 Clients** — Supports different authentication methods per client
+- **Permission-based Token Customization** — Adds `permissions` claim based on user roles or client identity
+- **OIDC Support** — OpenID Connect discovery, UserInfo endpoint
+- **Dev Mode** — Optional direct login endpoint for testing
 
-### Client Application (`spring-auth-client`)
+### Resource Server (`:8083`)
 
-- **OAuth2 Login** via Authorization Code Grant
-- **WebClient** calls the Resource Server with the access token from the OAuth2 session
-- **CustomOidcUserService** — extracts roles from `resource_access` claim in the access token (Keycloak-compatible pattern)
-- **JwtDecoderFactory** — caches `JwtDecoder` instances per client registration for efficient token validation
+- **Dual Role** — Acts as both Resource Server and OAuth2 Client
+- **JWT Client Authentication** — Supports `private_key_jwt` and `client_secret_jwt`
+- **JWK Source Options** — Runtime key generation or keystore file
+- **Permission-based Authorization** — Uses custom JWT converter for `permissions` claim
+- **Service-to-Service Calls** — Calls external services with `client_credentials` grant
 
-### Resource Server (`spring-resource-server`)
+### Client Application
 
-- **JWT validation** against the Auth Server's issuer URI (`http://localhost:9000`)
-- **Method-level security** with `@PreAuthorize` annotations
-- **Scope-based access control** — e.g., `SCOPE_user.read`, `user.write`
+- **OAuth2 Login** — Authorization Code flow
+- **WebClient Integration** — Calls Resource Server with access token
+- **Custom OIDC User Service** — Extracts roles from token claims
 
 ---
 
-## ⚙️ Configuration Overview
+## ⚙️ Configuration Highlights
 
-| Property | Auth Server | Client | Resource Server |
-|---|---|---|---|
-| `server.port` | `9000` | `8080` | `8083` |
-| Issuer URI | `http://localhost:9000` | — | `http://localhost:9000` |
-| Security logging | `DEBUG` | `DEBUG` | `DEBUG` |
+### Authorization Server — Registering Clients
+
+Configure clients with different authentication methods in `application.yml`:
+
+```yaml
+auth-server:
+  clients:
+    # Client using client_secret_basic (default for most web apps)
+    - client-id: myclient
+      client-secret: secret
+      client-authentication-methods: client_secret_basic
+      grant-types:
+        - authorization_code
+        - refresh_token
+      redirect-uris:
+        - http://localhost:8080/login/oauth2/code/myclient
+      scopes: [openid, profile, email]
+
+    # Client supporting multiple methods including private_key_jwt
+    - client-id: resource-server-client
+      client-secret: secret123
+      client-authentication-methods:
+        - private_key_jwt
+        - client_secret_post
+        - client_secret_basic
+      grant-types: [client_credentials]
+      scopes: [openid, profile, email]
+      jwks:
+        uri: http://localhost:8083/private_key_jwt/jwks  # Public key endpoint
+        signing-algorithm: RS256
+
+    # Client using client_secret_jwt (symmetric)
+    - client-id: resource-server-client-symmetric
+      client-secret: my-oauth2-client-secret-min-32-chars-here  # Min 32 chars for HS256
+      client-authentication-methods: [client_secret_jwt]
+      grant-types: [client_credentials]
+      scopes: [openid, profile, email]
+      jwks:
+        signing-algorithm: HS256
+```
+
+### Resource Server — OAuth2 Client Configuration
+
+Configure the Resource Server to authenticate using JWT-based methods:
+
+```yaml
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          internal-resource-server-id:
+            client-id: resource-server-client-symmetric
+            client-secret: my-oauth2-client-secret-min-32-chars-here
+            authorization-grant-type: client_credentials
+            client-authentication-method: client_secret_jwt  # or private_key_jwt
+        provider:
+          internal-resource-server-id:
+            issuer-uri: http://localhost:9000
+
+app:
+  client:
+    registration-id: internal-resource-server-id
+    authentication-method: client_secret_jwt
+    
+    # For client_secret_jwt
+    symmetric-key:
+      algorithm: HmacSHA256
+      jws-algorithm: HS256
+    
+    # For private_key_jwt
+    jwk:
+      source: runtime  # or 'keystore'
+      keystore:
+        path: classpath:client-keystore.p12
+        password: password
+        alias: spring-resource-server
+        type: PKCS12
+```
 
 ---
 
